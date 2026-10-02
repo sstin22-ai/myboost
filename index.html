@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>⚡ MyBoost</title>
-<!-- Supabase not needed — using localStorage -->
+<script src="https://js.stripe.com/v3/"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#07090f;color:#f0f0f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
@@ -245,7 +245,7 @@ tr:last-child td{border-bottom:none}
             <div style="font-size:12px;color:rgba(255,255,255,0.3)">✗ Comments & views</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.3)">✗ Content scheduling</div>
           </div>
-          <button class="btn btn-full" onclick="selectPlan('starter',99)">Get Started</button>
+          <button class="btn btn-full" onclick="stripeCheckout('growth')">Get Started</button>
         </div>
 
         <!-- GROWTH -->
@@ -264,7 +264,7 @@ tr:last-child td{border-bottom:none}
             <div style="font-size:12px;color:rgba(255,255,255,0.8)">✓ Monthly engagement report</div>
             <div style="font-size:12px;color:#FF6B35">✓ Add platforms at +$99/mo each</div>
           </div>
-          <button class="btn-ember btn-full" onclick="selectPlan('growth',249)">Subscribe — $249/mo</button>
+          <button class="btn-ember btn-full" onclick="stripeCheckout('growth')">Subscribe — $249/mo</button>
         </div>
 
         <!-- PRO -->
@@ -281,7 +281,7 @@ tr:last-child td{border-bottom:none}
             <div style="font-size:12px;color:rgba(255,255,255,0.8)">✓ Priority fulfillment</div>
             <div style="font-size:12px;color:#34D399">✓ AI daily blog + auto-post (+$149/mo)</div>
           </div>
-          <button class="btn btn-full" onclick="selectPlan('pro',449)">Go Pro</button>
+          <button class="btn btn-full" onclick="stripeCheckout('pro')">Go Pro</button>
         </div>
       </div>
 
@@ -937,6 +937,53 @@ window.addEventListener('load',()=>{
   const k=localStorage.getItem('pk_key');
   if(k&&document.getElementById('api-key-input')) document.getElementById('api-key-input').value=k;
 });
+
+// ── STRIPE CONFIG ──
+const STRIPE_PK = 'pk_test_51UMC6qEH0ZltOk2bwEDV7hRa5GPebA7xK8dwu1sa1v5Lp34iYKtM5rRiPKTbW5PmxeVzAtjU7v13BjB14gEH9ais00UBf3P1TE';
+const STRIPE_PRICES = {
+  growth: 'price_1UMCQjEH0ZltOk2bZPCyga14',
+  pro:    'price_1UMCSSEH0ZltOk2bT78COkRM',
+  addon:  'price_1UMCTAEH0ZltOk2b3lcuRvC3',
+  blog:   'price_1UMCUoEH0ZltOk2bDoyibnAH',
+};
+
+async function stripeCheckout(plan){
+  // Admin never pays
+  if(currentUser&&currentUser.role==='admin'){
+    showToast('Admin accounts are exempt from payment','error');
+    return;
+  }
+  const priceId = STRIPE_PRICES[plan];
+  if(!priceId){showToast('Plan not found','error');return;}
+  try{
+    const stripe = Stripe(STRIPE_PK);
+    const {error} = await stripe.redirectToCheckout({
+      lineItems:[{price:priceId, quantity:1}],
+      mode:'subscription',
+      successUrl: window.location.origin+'?success=true&plan='+plan,
+      cancelUrl: window.location.origin+'?canceled=true',
+      customerEmail: currentUser?.email||undefined,
+    });
+    if(error) showToast(error.message,'error');
+  } catch(e){
+    showToast('Checkout error — try again','error');
+  }
+}
+
+// Handle return from Stripe
+const urlParams = new URLSearchParams(window.location.search);
+if(urlParams.get('success')==='true'){
+  const plan = urlParams.get('plan')||'growth';
+  setTimeout(()=>{
+    showToast('Payment successful! Your '+plan+' plan is now active. ⚡');
+    // Admin will activate plan manually until webhook is set up
+  },1000);
+  window.history.replaceState({},document.title,window.location.pathname);
+}
+if(urlParams.get('canceled')==='true'){
+  setTimeout(()=>showToast('Payment cancelled.','error'),500);
+  window.history.replaceState({},document.title,window.location.pathname);
+}
 </script>
 </body>
 </html>
