@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <title>⚡ MyBoost</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.0/umd/supabase.min.js"></script>
+<!-- Supabase not needed — using localStorage -->
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#07090f;color:#f0f0f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
@@ -573,7 +573,7 @@ function renderAll(){
 function renderDashboard(){
   const u=USERS.find(u=>u.id===currentUser.id);
   const h=new Date().getHours();
-  const greet=h<12?'Good morning':'h<17?Good afternoon':'Good evening';
+  const greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
   document.getElementById('dash-greeting').textContent=
     (h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+u.name.split(' ')[0]+' 👋';
 
