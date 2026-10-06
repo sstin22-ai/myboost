@@ -137,8 +137,8 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="l-err" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none"></div>
     <button class="btn btn-full" onclick="doLogin()">Sign In →</button>
-    <div style="margin-top:14px;font-size:11px;color:#222244;text-align:center">
-      Contact admin for access
+    <div style="margin-top:14px;font-size:11px;color:#1a1a2e;text-align:center">
+      Contact admin for access · hello@sohomediahouse.com
     </div>
   </div>
 </div>
@@ -489,7 +489,7 @@ const AUTO_PACKAGES = {
 
 // ── USERS ──
 let USERS = JSON.parse(localStorage.getItem('mb_users')||JSON.stringify([
-  {id:1,name:'Sandra (Admin)',email:'admin@myboost.com',role:'admin',
+  {id:1,name:'Sandra (Admin)',email:'sstin22@gmail.com',role:'admin',
    plan:'growth',planStatus:'active',planStart:'2026-09-28',
    platforms:['instagram'],monthlyRevenue:249,
    urls:[{id:'u1',platform:'instagram',type:'profile',url:'instagram.com/sandrastinson',label:'Main IG'}]},
@@ -508,13 +508,30 @@ function saveState(){
 }
 
 // ── AUTH ──
+const ADMIN_EMAIL = 'sstin22@gmail.com';
+const ADMIN_PASS  = 'Yasmen01@@##';
+
 function doLogin(){
-  const email=document.getElementById('l-email').value;
+  const email=document.getElementById('l-email').value.trim().toLowerCase();
   const pass=document.getElementById('l-pass').value;
-  const user=USERS.find(u=>u.email===email);
   const err=document.getElementById('l-err');
+  err.style.display='none';
+  // Hardlocked admin — never overridden by localStorage
+  if(email===ADMIN_EMAIL.toLowerCase()){
+    if(pass!==ADMIN_PASS){err.textContent='Wrong password.';err.style.display='block';return;}
+    let adminUser=USERS.find(u=>u.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+    if(!adminUser){adminUser={id:1,name:'Sandra (Admin)',email:ADMIN_EMAIL,role:'admin',plan:'none',planStatus:'active',platforms:[],urls:[],monthlyRevenue:0};USERS.unshift(adminUser);saveState();}
+    currentUser=adminUser;
+    document.getElementById('login-page').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-btn').textContent='👋 Sandra';
+    document.getElementById('admin-tab').style.display='';
+    updateSubBadge();renderAll();return;
+  }
+  const user=USERS.find(u=>u.email.toLowerCase()===email);
   if(!user){err.textContent='Email not found.';err.style.display='block';return;}
-  if(pass!=='boost123'){err.textContent='Wrong password.';err.style.display='block';return;}
+  const correctPass=user.password||'boost123';
+  if(pass!==correctPass){err.textContent='Wrong password.';err.style.display='block';return;}
   currentUser=user;
   document.getElementById('login-page').style.display='none';
   document.getElementById('app').style.display='block';
@@ -522,6 +539,16 @@ function doLogin(){
   if(user.role==='admin') document.getElementById('admin-tab').style.display='';
   updateSubBadge();
   renderAll();
+}
+
+function resetPassword(uid){
+  const u=USERS.find(u=>u.id===uid);
+  if(!u){showToast('User not found','error');return;}
+  const np=prompt('Set new password for '+u.name+':');
+  if(!np||np.length<6){showToast('Password must be 6+ characters','error');return;}
+  u.password=np;
+  saveState();
+  showToast('Password updated for '+u.name+' ✅');
 }
 
 function doLogout(){
@@ -796,6 +823,7 @@ function renderAdminSubs(){
           <option value="pro" ${u.plan==='pro'?'selected':''}>Pro $449</option>
         </select>
         <button class="btn-sm" onclick="triggerAutoGrowth(${u.id})">⚡ Run Now</button>
+        ${u.email!==ADMIN_EMAIL?`<button class="btn-sm" onclick="resetPassword(${u.id})" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">🔑 Reset PW</button>`:''}
       </div>
     </td>
   </tr>`).join('');
