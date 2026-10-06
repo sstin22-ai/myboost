@@ -138,7 +138,7 @@ tr:last-child td{border-bottom:none}
     <div id="l-err" style="color:#ef4444;font-size:12px;margin-bottom:10px;display:none"></div>
     <button class="btn btn-full" onclick="doLogin()">Sign In →</button>
     <div style="margin-top:14px;font-size:11px;color:#222244;text-align:center">
-      admin@myboost.com · member2@myboost.com<br/>Password: boost123
+      Contact admin for access
     </div>
   </div>
 </div>
@@ -939,12 +939,12 @@ window.addEventListener('load',()=>{
 });
 
 // ── STRIPE CONFIG ──
-const STRIPE_PK = 'pk_test_51UMC6qEH0ZltOk2bwEDV7hRa5GPebA7xK8dwu1sa1v5Lp34iYKtM5rRiPKTbW5PmxeVzAtjU7v13BjB14gEH9ais00UBf3P1TE';
+const STRIPE_PK = 'pk_live_51UMC6iE9Wg6mGb3NbVCBK9u9nDGAdyyK3eoOg4sMngkiUw68BAJAdzwVV4kadIfm0n84nkJfwsRRk1j0nkgl5twf00tEZXadm5';
 const STRIPE_PRICES = {
-  growth: 'price_1UMCQjEH0ZltOk2bZPCyga14',
-  pro:    'price_1UMCSSEH0ZltOk2bT78COkRM',
-  addon:  'price_1UMCTAEH0ZltOk2b3lcuRvC3',
-  blog:   'price_1UMCUoEH0ZltOk2bDoyibnAH',
+  growth: 'price_1UNNmWCpaTEcSNaEJ4qWrSYu',
+  pro:    'price_1UNNnECpaTEcSNaEe5pEtASy',
+  addon:  'price_1UNNo6CpaTEcSNaEtHlQxl1v',
+  blog:   'price_1UNNoyCpaTEcSNaEPAmZppn0',
 };
 
 async function stripeCheckout(plan){
