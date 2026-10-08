@@ -526,7 +526,9 @@ function doLogin(){
     document.getElementById('app').style.display='block';
     document.getElementById('user-btn').textContent='👋 Sandra';
     document.getElementById('admin-tab').style.display='';
-    updateSubBadge();renderAll();return;
+    updateSubBadge();renderAll();
+    setTimeout(runDailyAutoGrowth, 2000); // Auto-run 2s after login
+    return;
   }
   const user=USERS.find(u=>u.email.toLowerCase()===email);
   if(!user){err.textContent='Email not found.';err.style.display='block';return;}
@@ -822,7 +824,7 @@ function renderAdminSubs(){
           <option value="growth" ${u.plan==='growth'?'selected':''}>Growth $249</option>
           <option value="pro" ${u.plan==='pro'?'selected':''}>Pro $449</option>
         </select>
-        <button class="btn-sm" onclick="triggerAutoGrowth(${u.id})">⚡ Run Now</button>
+        <button class="btn-sm" onclick="triggerAutoGrowth(${u.id},true)" title="Force run — bypasses daily limit" style="${u.lastRun===new Date().toISOString().slice(0,10)?'color:#34D399;border-color:rgba(52,211,153,0.3)':''}">⚡ ${u.lastRun===new Date().toISOString().slice(0,10)?'Ran Today':'Run Now'}</button>
         ${u.email!==ADMIN_EMAIL?`<button class="btn-sm" onclick="resetPassword(${u.id})" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">🔑 Reset PW</button>`:''}
       </div>
     </td>
@@ -857,10 +859,17 @@ function renderAdminActivity(){
 }
 
 // ── AUTO GROWTH TRIGGER ──
-async function triggerAutoGrowth(uid){
+async function triggerAutoGrowth(uid, force=false){
   const u=USERS.find(u=>u.id===uid);
   if(!u.urls.length){showToast('No URLs saved for this member','error');return;}
   if(u.planStatus!=='active'){showToast('Member has no active plan','error');return;}
+  // Cooldown — one run per member per day unless forced by admin
+  const today=new Date().toISOString().slice(0,10);
+  if(!force && u.lastRun===today){
+    showToast(u.name+' already ran today ✅ — growth is processing','error');return;
+  }
+  u.lastRun=today;
+  saveState();
   showToast('Running auto-growth for '+u.name+'...');
 
   for(const url of u.urls){
@@ -996,6 +1005,24 @@ async function stripeCheckout(plan){
   } catch(e){
     showToast('Checkout error — try again','error');
   }
+}
+
+// ── AUTO DAILY RUNNER ──
+// Fires once per day for all active members when admin is logged in
+async function runDailyAutoGrowth(){
+  if(!currentUser||currentUser.role!=='admin') return;
+  const today=new Date().toISOString().slice(0,10);
+  const lastAutoRun=localStorage.getItem('mb_last_auto_run');
+  if(lastAutoRun===today) return; // Already ran today
+  localStorage.setItem('mb_last_auto_run', today);
+  const activeMembers=USERS.filter(u=>u.planStatus==='active'&&u.urls&&u.urls.length>0);
+  if(!activeMembers.length) return;
+  showToast('⚡ Auto-growth running for '+activeMembers.length+' member(s)...');
+  for(const u of activeMembers){
+    await triggerAutoGrowth(u.id, false);
+    await new Promise(r=>setTimeout(r,500));
+  }
+  showToast('✅ Daily auto-growth complete for all active members!');
 }
 
 // Handle return from Stripe
