@@ -390,6 +390,14 @@ tr:last-child td{border-bottom:none}
           <div id="api-result" style="margin-top:10px;font-size:12px;display:none"></div>
         </div>
         <div class="card" style="max-width:500px">
+          <div class="h2">☁️ Sync to Cloud</div>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.6">
+            Push all member data to Vercel KV so the 7am cron can run automatically — even when you're not logged in.
+          </div>
+          <div id="sync-status" style="font-size:12px;color:#34D399;margin-bottom:12px;display:none"></div>
+          <button class="btn btn-full" onclick="syncToCloud()">⬆ Sync Members to Cloud</button>
+        </div>
+        <div class="card" style="max-width:500px">
           <div class="h2">⏰ Auto-Schedule Settings</div>
           <div style="font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.6">
             Set the daily posting times per platform. Based on 2026 engagement data (Buffer analysis of 52M posts).
@@ -922,6 +930,31 @@ function addUser(){
   document.getElementById('au-email').value='';
   showToast(name+' added! Password: boost123');
   renderAdminSubs();
+}
+
+// ── SYNC TO CLOUD ──
+async function syncToCloud(){
+  const el=document.getElementById('sync-status');
+  el.style.display='block';
+  el.style.color='#f59e0b';
+  el.textContent='Syncing...';
+  try{
+    const res=await fetch('/api/sync',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-cron-secret':localStorage.getItem('cron_secret')||''},
+      body:JSON.stringify({users:USERS,activity:ACTIVITY.slice(0,100)})
+    });
+    if(res.ok){
+      el.style.color='#34D399';
+      el.textContent='✅ Synced successfully — cron will run at 7am daily';
+    } else {
+      el.style.color='#FF6B35';
+      el.textContent='⚠ Sync failed — deploy the api/cron.js file to GitHub first';
+    }
+  }catch(e){
+    el.style.color='#FF6B35';
+    el.textContent='⚠ Sync endpoint not live yet — deploy api/cron.js to GitHub first';
+  }
 }
 
 // ── API CONFIG ──
