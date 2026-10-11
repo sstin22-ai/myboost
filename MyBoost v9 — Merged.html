@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>⚡ MyBoost</title>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+:root{
+  --bg:#07090f;--surface:#111520;--surface2:#0d0f1a;--border:rgba(255,255,255,0.08);
+  --accent:#7c5cfc;--accent2:#a78bfa;--accent-glow:rgba(124,92,252,0.25);
+  --ember:#FF6B35;--green:#34D399;--red:#ef4444;--gold:#f4c842;
+  --text:#f0f0f0;--muted:#6b7280;--dim:rgba(255,255,255,0.5);
+  --radius:14px;--radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh}
+input,select,textarea,button{font-family:'Segoe UI',sans-serif}
+
+/* ── NAV ── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(7,9,15,0.97);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 20px;
+  display:flex;align-items:center;justify-content:space-between;height:58px}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logomark{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;box-shadow:0 0 14px var(--accent-glow)}
+.nav-logotext{font-size:17px;font-weight:600;color:var(--text)}
+.nav-logotext span{color:var(--accent2)}
+.nav-tag{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.nav-right{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.nav-tab{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);transition:all 0.2s}
+.nav-tab:hover{border-color:var(--accent2);color:var(--accent2)}
+.nav-tab.active{border-color:var(--accent);background:rgba(124,92,252,0.12);color:var(--accent2)}
+.sub-badge{border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+.sub-active{background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3)}
+.sub-inactive{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+
+/* ── LAYOUT ── */
+.main{padding:72px 18px 48px;max-width:1100px;margin:0 auto}
+.page{display:none}.page.active{display:block}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-0.5px;margin-bottom:4px}
+.text-muted{color:var(--muted);font-size:12px}
+.h2{font-size:15px;font-weight:600;margin-bottom:12px}
+.h3{font-size:11px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.divider{height:1px;background:var(--border);margin:16px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:13px}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+
+/* ── PLATFORM TABS ── */
+.plat-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.plat-btn{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;
+  border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s}
+.plat-btn:hover{border-color:var(--accent2);color:var(--text)}
+.plat-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;
+  box-shadow:0 0 18px var(--accent-glow)}
+.plat-icon{font-size:16px}
+
+/* ── SERVICE PILLS ── */
+.svc-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:24px}
+.svc-btn{padding:6px 15px;border-radius:20px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all 0.2s}
+.svc-btn:hover{color:var(--text);border-color:var(--muted)}
+.svc-btn.active{background:var(--surface2);border-color:var(--accent2);color:var(--accent2)}
+
+/* ── PACKAGE CARDS ── */
+.pkg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:28px}
+.pkg-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);
+  padding:20px;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden}
+.pkg-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity 0.2s}
+.pkg-card:hover{border-color:var(--accent2);transform:translateY(-2px)}
+.pkg-card:hover::before{opacity:1}
+.pkg-card.selected{border-color:var(--accent);
+  background:linear-gradient(135deg,rgba(124,92,252,0.1),rgba(167,139,250,0.04));
+  box-shadow:0 0 24px var(--accent-glow)}
+.pkg-card.selected::before{opacity:1}
+.pkg-card.popular{border-color:var(--gold)}
+.pkg-card.popular::before{background:linear-gradient(90deg,var(--gold),#f97316);opacity:1}
+.pkg-best{position:absolute;top:12px;right:12px;background:var(--gold);color:#07090f;
+  font-size:9px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:0.5px}
+.pkg-plat-icon{font-size:26px;margin-bottom:10px}
+.pkg-svc-label{font-size:10px;font-weight:700;color:var(--accent2);letter-spacing:0.5px;
+  text-transform:uppercase;margin-bottom:5px}
+.pkg-qty{font-size:26px;font-weight:800;letter-spacing:-1px;margin-bottom:3px}
+.pkg-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.pkg-price{font-size:20px;font-weight:700;color:var(--accent2);margin-bottom:5px}
+.pkg-delivery{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px}
+.pkg-check{position:absolute;bottom:14px;right:14px;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);display:flex;align-items:center;justify-content:center;
+  opacity:0;transition:opacity 0.2s;font-size:11px;color:#fff;font-weight:800}
+.pkg-card.selected .pkg-check{opacity:1}
+
+/* ── ORDER PANEL ── */
+.order-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+.cart-items{display:flex;flex-direction:column;gap:10px}
+.cart-item{display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px}
+.cart-item-l{display:flex;align-items:center;gap:10px}
+.cart-item-icon{font-size:20px}
+.cart-item-name{font-size:13px;font-weight:600}
+.cart-item-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.cart-item-r{display:flex;align-items:center;gap:10px}
+.cart-item-price{font-size:14px;font-weight:700;color:var(--accent2)}
+.qty-ctrl{display:flex;align-items:center;gap:5px}
+.qty-btn{width:24px;height:24px;border-radius:5px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);cursor:pointer;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s}
+.qty-btn:hover{border-color:var(--accent2);color:var(--accent2)}
+.qty-num{font-size:13px;font-weight:600;min-width:18px;text-align:center}
+.remove-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:3px;transition:color 0.2s}
+.remove-btn:hover{color:var(--red)}
+.cart-total-row{display:flex;justify-content:space-between;align-items:center;
+  padding:16px 0 0;margin-top:14px;border-top:1px solid var(--border)}
+.cart-total-amount{font-size:22px;font-weight:800;color:var(--accent2)}
+
+/* ── URL INPUT ── */
+.url-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.url-row{display:flex;gap:8px}
+
+/* ── BUTTONS ── */
+.btn{background:linear-gradient(135deg,var(--accent),#2563eb);border:none;color:#fff;
+  border-radius:var(--radius-sm);padding:11px 22px;font-weight:600;font-size:13px;cursor:pointer;transition:opacity 0.2s}
+.btn:hover{opacity:0.88}
+.btn-ember{background:var(--ember);border:none;color:#07090f;border-radius:var(--radius-sm);
+  padding:11px 22px;font-weight:700;font-size:13px;cursor:pointer;transition:opacity 0.2s}
+.btn-ember:hover{opacity:0.88}
+.btn-violet{background:linear-gradient(135deg,var(--accent),#9747ff);border:none;color:#fff;
+  border-radius:var(--radius-sm);padding:14px 22px;font-weight:700;font-size:14px;cursor:pointer;
+  box-shadow:0 4px 20px var(--accent-glow);transition:all 0.2s}
+.btn-violet:hover{transform:translateY(-1px);box-shadow:0 6px 28px var(--accent-glow)}
+.btn-violet:disabled{opacity:0.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-sm{background:rgba(255,255,255,0.06);border:1px solid var(--border);
+  color:var(--text);border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer;transition:all 0.15s}
+.btn-sm:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn-green{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);
+  color:var(--green);border-radius:7px;padding:6px 14px;font-size:12px;cursor:pointer}
+.btn-full{width:100%}
+
+/* ── TRUST ROW ── */
+.trust-row{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;margin-top:12px}
+.trust-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+
+/* ── PLAN CARDS ── */
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:16px 0}
+.plan-card{border-radius:16px;padding:24px;position:relative;overflow:hidden;transition:transform 0.2s}
+.plan-card:hover{transform:translateY(-2px)}
+.plan-popular{position:absolute;top:12px;right:12px;background:var(--accent);color:#fff;
+  font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:1px}
+
+/* ── TABLES ── */
+.tbl-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:14px}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 14px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);letter-spacing:0.5px}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+
+/* ── CHIPS ── */
+.chip{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.s-active{color:var(--green);background:rgba(52,211,153,0.12)}
+.s-pending{color:#f59e0b;background:rgba(245,158,11,0.12)}
+.s-processing{color:#3b82f6;background:rgba(59,130,246,0.12)}
+.s-completed{color:var(--green);background:rgba(52,211,153,0.12)}
+.s-cancelled{color:var(--red);background:rgba(239,68,68,0.12)}
+.s-paused{color:var(--muted);background:rgba(107,114,128,0.12)}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:14px}
+label{font-size:11px;color:var(--muted);margin-bottom:4px;display:block;letter-spacing:0.5px}
+input,select,textarea{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 14px;color:var(--text);font-size:13px;outline:none;width:100%;transition:border 0.2s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.url-input-field{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:11px 14px;color:var(--text);font-size:13px;outline:none;flex:1;transition:border 0.2s}
+.url-input-field:focus{border-color:var(--accent)}
+
+/* ── PROGRESS ── */
+.progress-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.5s}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);display:none;
+  align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid rgba(255,255,255,0.1);border-radius:18px;
+  padding:26px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;background:none;border:none;
+  cursor:pointer;color:var(--muted);font-size:18px;transition:color 0.2s}
+.modal-close:hover{color:var(--text)}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:18px;color:var(--text)}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.modal-summary{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:20px}
+.modal-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px}
+.modal-row:last-child{margin-bottom:0}
+.modal-total{border-top:1px solid var(--border);padding-top:9px;margin-top:9px;font-weight:700;font-size:14px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 18px;border-radius:12px;
+  font-size:13px;font-weight:600;z-index:999;background:var(--surface);display:none;
+  border:1px solid var(--green);color:var(--green);max-width:320px;
+  display:flex;align-items:center;gap:8px;
+  transform:translateY(60px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1)}
+.toast.show{transform:translateY(0);opacity:1;display:flex}
+.toast.error{border-color:var(--red);color:var(--red)}
+
+/* ── MISC ── */
+.url-tag{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;padding:5px 11px;font-size:12px;margin:4px;color:#a0a0c0}
+.section-head{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;
+  margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-head::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── LOGIN ── */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
+.login-box{background:var(--surface);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;max-width:380px;width:100%}
+
+/* ── DASHBOARD HERO ── */
+.dash-hero{background:linear-gradient(135deg,rgba(124,92,252,0.12),rgba(167,139,250,0.04));
+  border:1px solid rgba(124,92,252,0.2);border-radius:var(--radius);padding:22px;margin-bottom:16px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px){
+  .main{padding:66px 12px 40px}
+  .pkg-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .pkg-card{padding:14px}.pkg-qty{font-size:20px}
+  .plat-btn{padding:7px 12px;font-size:12px}
+  .nav-right{gap:4px}
+  .stat-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:380px){.pkg-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-page" class="login-wrap">
+  <div class="login-box">
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:20px">
+      <div style="width:42px;height:42px;background:linear-gradient(135deg,#7c5cfc,#a78bfa);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff">M</div>
+      <div>
+        <div style="font-size:22px;font-weight:700;color:#fff">My<span style="color:#a78bfa">Boost</span></div>
+        <div style="font-size:11px;color:#6b7280">Private Growth Network</div>
+      </div>
+    </div>
+    <div class="form-group"><label>Email</label>
+      <input id="l-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="form-group"><label>Password</label>
+      <input id="l-pass" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div id="l-err" style="color:var(--red);font-size:12px;margin-bottom:10px;display:none"></div>
+    <button class="btn-violet btn-full" onclick="doLogin()">Sign In →</button>
+    <div style="margin-top:14px;font-size:11px;color:#1a1a2e;text-align:center">Contact admin for access · hello@sohomediahouse.com</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app" style="display:none">
+  <nav class="nav">
+    <div class="nav-logo">
+      <div class="nav-logomark">M</div>
+      <div>
+        <div class="nav-logotext">My<span>Boost</span></div>
+        <div class="nav-tag">Growth Network</div>
+      </div>
+    </div>
+    <div class="nav-right">
+      <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+      <button class="nav-tab" onclick="showPage('store')">Store</button>
+      <button class="nav-tab" onclick="showPage('profile')">My Profiles</button>
+      <button class="nav-tab" onclick="showPage('plans')">Plans</button>
+      <button class="nav-tab" onclick="showPage('activity')">Activity</button>
+      <button class="nav-tab" id="admin-tab" style="display:none" onclick="showPage('admin')">⚙ Admin</button>
+      <div class="sub-badge" id="sub-badge">Loading...</div>
+      <button class="nav-tab" onclick="doLogout()" id="user-btn"></button>
+    </div>
+  </nav>
+
+  <div class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div style="margin-bottom:20px">
+        <div class="page-title" id="dash-greeting">Welcome back 👋</div>
+        <div class="text-muted" id="dash-sub-info"></div>
+      </div>
+      <div class="stat-grid" id="dash-stats"></div>
+      <div class="dash-hero" id="dash-sub-card"><div id="dash-sub-content"></div></div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="h2">Active Platforms</div>
+          <button class="btn-sm" onclick="showPage('profile')">Manage URLs →</button>
+        </div>
+        <div id="dash-platforms"></div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="h2">Recent Activity</div>
+          <button class="btn-sm" onclick="showPage('activity')">View All →</button>
+        </div>
+        <div id="dash-activity"></div>
+      </div>
+    </div>
+
+    <!-- ── STORE (NEW) ── -->
+    <div class="page" id="page-store">
+      <div style="margin-bottom:24px">
+        <div class="page-title">Growth Store ⚡</div>
+        <div class="text-muted">Choose platform, service, and quantity — orders go straight to Peakerr</div>
+      </div>
+
+      <!-- Platform Tabs -->
+      <div class="section-head">Platform</div>
+      <div class="plat-tabs" id="store-plat-tabs">
+        <button class="plat-btn active" onclick="selectStorePlat('instagram',this)"><span class="plat-icon">📸</span>Instagram</button>
+        <button class="plat-btn" onclick="selectStorePlat('facebook',this)"><span class="plat-icon">👥</span>Facebook</button>
+        <button class="plat-btn" onclick="selectStorePlat('tiktok',this)"><span class="plat-icon">🎵</span>TikTok</button>
+        <button class="plat-btn" onclick="selectStorePlat('youtube',this)"><span class="plat-icon">▶️</span>YouTube</button>
+        <button class="plat-btn" onclick="selectStorePlat('twitter',this)"><span class="plat-icon">𝕏</span>Twitter</button>
+      </div>
+
+      <!-- Service Pills -->
+      <div class="svc-pills" id="store-svc-pills">
+        <button class="svc-btn active" onclick="selectStoreSvc('followers',this)">Followers</button>
+        <button class="svc-btn" onclick="selectStoreSvc('likes',this)">Likes</button>
+        <button class="svc-btn" onclick="selectStoreSvc('comments',this)">Comments</button>
+        <button class="svc-btn" onclick="selectStoreSvc('shares',this)">Shares</button>
+        <button class="svc-btn" onclick="selectStoreSvc('views',this)">Views</button>
+      </div>
+
+      <!-- Packages -->
+      <div class="section-head">Select Package</div>
+      <div class="pkg-grid" id="store-pkg-grid"></div>
+
+      <!-- Cart -->
+      <div class="order-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="h2" style="margin:0">Your Order</div>
+          <div id="store-cart-count" style="background:var(--accent);color:#fff;width:22px;height:22px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700">0</div>
+        </div>
+        <div id="store-cart-content">
+          <div class="empty" style="padding:24px">
+            <div style="font-size:28px;margin-bottom:8px">🛒</div>
+            <div>Select a package above to begin</div>
+          </div>
+        </div>
+        <div id="store-cart-total" style="display:none">
+          <div class="cart-total-row">
+            <div style="font-size:13px;color:var(--muted)">Order Total</div>
+            <div class="cart-total-amount" id="store-total-amt">$0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL + Checkout -->
+      <div class="url-section" id="store-url-section" style="display:none">
+        <div class="h2">Delivery URL 🎯</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px" id="store-url-hint">Enter your profile or post URL</div>
+        <div class="url-row">
+          <input type="url" class="url-input-field" id="store-url-input" placeholder="https://www.instagram.com/yourusername"/>
+          <button class="btn-sm" onclick="validateStoreUrl()">Verify ✓</button>
+        </div>
+        <div id="store-url-status" style="font-size:11px;margin-top:6px"></div>
+      </div>
+
+      <button class="btn-violet btn-full" id="store-checkout-btn" disabled onclick="openStoreCheckout()">
+        Proceed to Checkout →
+      </button>
+      <div class="trust-row">
+        <div class="trust-item">🔒 Secure</div>
+        <div class="trust-item">⚡ Fast delivery</div>
+        <div class="trust-item">🔄 Refill guarantee</div>
+        <div class="trust-item">🙈 100% private</div>
+      </div>
+    </div>
+
+    <!-- ── MY PROFILES ── -->
+    <div class="page" id="page-profile">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <div class="page-title">My Social Profiles</div>
+          <div class="text-muted">Add your URLs once — growth is delivered automatically</div>
+        </div>
+        <button class="btn-ember" onclick="openAddUrl()">+ Add Profile URL</button>
+      </div>
+      <div class="card" style="background:rgba(124,92,252,0.05);border-color:rgba(124,92,252,0.2);margin-bottom:16px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="font-size:20px">⚡</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:4px">How auto-growth works</div>
+            <div style="font-size:12px;color:var(--dim);line-height:1.6">Add your Instagram, Facebook, YouTube, or TikTok URL. Once subscribed to a plan, growth (followers, likes, comments, views) is delivered to ALL saved URLs daily. No manual orders needed.</div>
+          </div>
+        </div>
+      </div>
+      <div id="profiles-list"></div>
+    </div>
+
+    <!-- ── PLANS ── -->
+    <div class="page" id="page-plans">
+      <div style="margin-bottom:20px">
+        <div class="page-title">Subscription Plans</div>
+        <div class="text-muted">Set it and forget it — growth runs automatically every day</div>
+      </div>
+      <div class="plan-grid">
+        <div class="plan-card" style="background:linear-gradient(135deg,#1B1B2F,#0D1F2D);border:1.5px solid var(--border)">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Starter</div>
+          <div style="font-size:36px;font-weight:700;color:#fff">$99<span style="font-size:14px;color:var(--muted)">/mo</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:16px">1 platform</div>
+          <div class="divider"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+            <div style="font-size:12px;color:var(--dim)">✓ 1 platform (IG, FB, YT, or TikTok)</div>
+            <div style="font-size:12px;color:var(--dim)">✓ Daily auto-growth</div>
+            <div style="font-size:12px;color:var(--dim)">✓ Followers + likes</div>
+            <div style="font-size:12px;color:var(--muted)">✗ Comments &amp; views</div>
+          </div>
+          <button class="btn btn-full" onclick="stripeCheckout('growth')">Get Started</button>
+        </div>
+        <div class="plan-card" style="background:linear-gradient(135deg,#1a0d30,#0D1F2D);border:1.5px solid var(--accent)">
+          <div class="plan-popular">MOST POPULAR</div>
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent2);margin-bottom:8px">Growth</div>
+          <div style="font-size:36px;font-weight:700;color:#fff">$249<span style="font-size:14px;color:var(--muted)">/mo</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">1 platform · IG auto-posts to FB</div>
+          <div style="font-size:10px;color:var(--accent2);margin-bottom:16px">+$99/mo per additional platform</div>
+          <div class="divider" style="border-color:rgba(124,92,252,0.2)"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+            <div style="font-size:12px;color:var(--text)">✓ Instagram (auto-posts to Facebook)</div>
+            <div style="font-size:12px;color:var(--text)">✓ Daily auto-growth — all types</div>
+            <div style="font-size:12px;color:var(--text)">✓ Followers, likes, comments, views</div>
+            <div style="font-size:12px;color:var(--text)">✓ Content calendar access</div>
+            <div style="font-size:12px;color:var(--accent2)">✓ Add platforms at +$99/mo each</div>
+          </div>
+          <button class="btn-violet btn-full" onclick="stripeCheckout('growth')">Subscribe — $249/mo</button>
+        </div>
+        <div class="plan-card" style="background:linear-gradient(135deg,#0B3D2E,#052E1C);border:1.5px solid rgba(52,211,153,0.3)">
+          <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:8px">Pro</div>
+          <div style="font-size:36px;font-weight:700;color:#fff">$449<span style="font-size:14px;color:var(--muted)">/mo</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:16px">All 4 platforms included</div>
+          <div class="divider" style="border-color:rgba(52,211,153,0.15)"></div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+            <div style="font-size:12px;color:var(--text)">✓ All 4 platforms — IG, FB, YT, TikTok</div>
+            <div style="font-size:12px;color:var(--text)">✓ Maximum daily growth</div>
+            <div style="font-size:12px;color:var(--text)">✓ All engagement types</div>
+            <div style="font-size:12px;color:var(--text)">✓ Priority fulfillment</div>
+            <div style="font-size:12px;color:var(--green)">✓ AI daily blog + auto-post (+$149/mo)</div>
+          </div>
+          <button class="btn btn-full" onclick="stripeCheckout('pro')">Go Pro</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="h2">Add-Ons</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">Additional Platform</div>
+            <div style="font-size:20px;font-weight:700;color:var(--ember);margin-bottom:6px">+$99<span style="font-size:11px;color:var(--muted)">/mo</span></div>
+            <div style="font-size:11px;color:var(--muted)">Add YouTube, TikTok, or standalone Facebook to any Growth plan</div>
+          </div>
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px">
+            <div style="font-size:13px;font-weight:600;margin-bottom:4px">Daily Blog + Auto-Post</div>
+            <div style="font-size:20px;font-weight:700;color:var(--ember);margin-bottom:6px">+$149<span style="font-size:11px;color:var(--muted)">/mo</span></div>
+            <div style="font-size:11px;color:var(--muted)">AI writes + publishes a daily blog post and auto-posts to social at optimal time</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACTIVITY ── -->
+    <div class="page" id="page-activity">
+      <div style="margin-bottom:20px">
+        <div class="page-title">Growth Activity</div>
+        <div class="text-muted">All auto-fulfillment orders across your platforms</div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Platform</th><th>Type</th><th>Qty</th><th>URL</th><th>Status</th><th>Fulfillment</th></tr></thead>
+          <tbody id="activity-tbody"><tr><td colspan="7" class="empty">No activity yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ADMIN ── -->
+    <div class="page" id="page-admin">
+      <div class="page-title" style="margin-bottom:16px">⚙ Admin Panel</div>
+      <div class="row" style="margin-bottom:16px">
+        <button class="nav-tab active" onclick="setAdminTab('subscribers',this)">👥 Subscribers</button>
+        <button class="nav-tab" onclick="setAdminTab('all-activity',this)">📋 All Activity</button>
+        <button class="nav-tab" onclick="setAdminTab('add-user',this)">➕ Add Member</button>
+        <button class="nav-tab" onclick="setAdminTab('api-config',this)">🔌 API Config</button>
+      </div>
+      <div id="admin-subscribers">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Member</th><th>Email</th><th>Plan</th><th>Status</th><th>Platforms</th><th>Since</th><th>Revenue</th><th>Actions</th></tr></thead>
+            <tbody id="admin-sub-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="admin-all-activity" style="display:none">
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Member</th><th>Platform</th><th>Type</th><th>Qty</th><th>Status</th><th>Auto/Manual</th></tr></thead>
+            <tbody id="admin-activity-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="admin-add-user" style="display:none">
+        <div class="card" style="max-width:440px">
+          <div class="h2">Add New Member</div>
+          <div class="form-group"><label>Full Name</label><input id="au-name" placeholder="Jane Doe"/></div>
+          <div class="form-group"><label>Email</label><input id="au-email" placeholder="jane@email.com"/></div>
+          <div class="form-group"><label>Plan</label>
+            <select id="au-plan">
+              <option value="none">No plan yet</option>
+              <option value="starter">Starter — $99/mo</option>
+              <option value="growth">Growth — $249/mo</option>
+              <option value="pro">Pro — $449/mo</option>
+            </select>
+          </div>
+          <button class="btn btn-full" onclick="addUser()">Add Member →</button>
+          <div style="margin-top:8px;color:#333355;font-size:11px">Default password: boost123</div>
+        </div>
+      </div>
+      <div id="admin-api-config" style="display:none">
+        <div class="card" style="max-width:500px">
+          <div class="h2">🔌 Peakerr API</div>
+          <div class="form-group"><label>API Key</label>
+            <input id="api-key-input" type="password" placeholder="Paste Peakerr API key"/>
+          </div>
+          <div class="form-group"><label>API URL</label>
+            <input id="api-url-input" value="https://peakerr.com/api/v2"/>
+          </div>
+          <div class="row">
+            <button class="btn" onclick="saveApiConfig()">Save</button>
+            <button class="btn-sm" onclick="testApi()">Test Connection</button>
+          </div>
+          <div id="api-result" style="margin-top:10px;font-size:12px;display:none"></div>
+        </div>
+        <div class="card" style="max-width:500px">
+          <div class="h2">☁️ Sync to Cloud</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Push all member data to Vercel KV so the 7am cron can run automatically.</div>
+          <div id="sync-status" style="font-size:12px;color:var(--green);margin-bottom:12px;display:none"></div>
+          <button class="btn btn-full" onclick="syncToCloud()">⬆ Sync Members to Cloud</button>
+        </div>
+        <div class="card" style="max-width:500px">
+          <div class="h2">⏰ Auto-Schedule Settings</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Set the daily posting times per platform.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+            <div><label>📸 Instagram</label><input id="t-ig" value="09:00" type="time"/></div>
+            <div><label>👥 Facebook</label><input id="t-fb" value="09:00" type="time"/></div>
+            <div><label>🎵 TikTok</label><input id="t-tt" value="14:00" type="time"/></div>
+            <div><label>▶️ YouTube</label><input id="t-yt" value="14:00" type="time"/></div>
+          </div>
+          <button class="btn btn-full" onclick="saveSchedule()">Save Schedule</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="overlay" id="url-overlay" onclick="closeOverlay(event,'url-overlay')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('url-overlay').classList.remove('open')">✕</button>
+    <div class="modal-title">Add Social Profile URL</div>
+    <div class="form-group"><label>Platform</label>
+      <select id="url-platform">
+        <option value="instagram">📸 Instagram</option>
+        <option value="facebook">👥 Facebook</option>
+        <option value="youtube">▶️ YouTube</option>
+        <option value="tiktok">🎵 TikTok</option>
+      </select>
+    </div>
+    <div class="form-group"><label>URL Type</label>
+      <select id="url-type">
+        <option value="profile">Profile / Page (for followers)</option>
+        <option value="post">Specific Post (for likes/comments)</option>
+        <option value="video">Video (for views/likes)</option>
+        <option value="channel">Channel (for subscribers)</option>
+      </select>
+    </div>
+    <div class="form-group"><label>URL</label>
+      <input id="url-value" placeholder="e.g. https://instagram.com/yourusername"/>
+    </div>
+    <div class="form-group"><label>Label (optional)</label>
+      <input id="url-label" placeholder="e.g. Main Instagram, Business Page"/>
+    </div>
+    <div style="background:rgba(124,92,252,0.06);border:1px solid rgba(124,92,252,0.2);border-radius:8px;padding:12px;margin-bottom:16px">
+      <div style="font-size:11px;color:var(--accent2);font-weight:600;margin-bottom:4px">URL Examples</div>
+      <div style="font-size:11px;color:var(--dim);line-height:1.7">
+        Instagram: https://instagram.com/yourusername<br/>
+        Facebook: https://facebook.com/yourpagename<br/>
+        YouTube: https://youtube.com/@yourchannel<br/>
+        TikTok: https://tiktok.com/@yourusername
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="document.getElementById('url-overlay').classList.remove('open')">Cancel</button>
+      <button class="btn-violet" onclick="saveUrl()">Save URL</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="plan-overlay" onclick="closeOverlay(event,'plan-overlay')">
+  <div class="modal-box">
+    <div class="modal-title" id="plan-modal-title">Subscribe to Plan</div>
+    <div id="plan-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="document.getElementById('plan-overlay').classList.remove('open')">Cancel</button>
+      <button class="btn-violet" id="plan-confirm-btn">Confirm Subscription</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="store-checkout-overlay" onclick="closeOverlay(event,'store-checkout-overlay')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="document.getElementById('store-checkout-overlay').classList.remove('open')">✕</button>
+    <div id="store-checkout-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toast-icon">✅</span><span id="toast-msg"></span></div>
+
+<script>
+// ── CONFIG ──
+let PEAKERR_KEY = 'ed0647689dafdcabd3b7c35f35bc54ee'; // Hardcoded — Peakerr API key
+let PEAKERR_URL = 'https://peakerr.com/api/v2';
+let SCHEDULE = JSON.parse(localStorage.getItem('mb_schedule')||'{"ig":"09:00","fb":"09:00","tt":"14:00","yt":"14:00"}');
+
+const PI={instagram:'📸',facebook:'👥',youtube:'▶️',tiktok:'🎵',twitter:'𝕏'};
+const PC={instagram:'#E1306C',facebook:'#1877F2',youtube:'#FF0000',tiktok:'#69C9D0',twitter:'#1DA1F2'};
+
+const AUTO_PACKAGES = {
+  instagram:{followers:{svc:'36642',qty:100},likes:{svc:'36642',qty:200},comments:{svc:'26586',qty:5}},
+  facebook:{followers:{svc:'20931',qty:100},likes:{svc:'32133',qty:200}},
+  youtube:{subscribers:{svc:'18463',qty:50},likes:{svc:'18463',qty:100}},
+  tiktok:{followers:{svc:'31820',qty:100},likes:{svc:'31820',qty:200},views:{svc:'31859',qty:1000}},
+};
+
+// ── STORE DATA ──
+const STORE_PKGS = {
+  instagram:{
+    followers:[{qty:'100',price:2.49,delivery:'24-48 hrs'},{qty:'250',price:4.99,delivery:'24-48 hrs'},{qty:'500',price:7.99,delivery:'24-72 hrs',popular:true},{qty:'1,000',price:12.99,delivery:'48-72 hrs'},{qty:'2,500',price:24.99,delivery:'3-5 days'},{qty:'5,000',price:44.99,delivery:'5-7 days'}],
+    likes:[{qty:'100',price:1.49,delivery:'1-6 hrs'},{qty:'500',price:4.99,delivery:'1-12 hrs'},{qty:'1,000',price:7.99,delivery:'6-24 hrs',popular:true},{qty:'2,500',price:14.99,delivery:'12-48 hrs'},{qty:'5,000',price:24.99,delivery:'24-72 hrs'},{qty:'10,000',price:39.99,delivery:'3-5 days'}],
+    comments:[{qty:'10',price:3.99,delivery:'1-6 hrs'},{qty:'25',price:7.99,delivery:'1-12 hrs'},{qty:'50',price:12.99,delivery:'6-24 hrs',popular:true},{qty:'100',price:19.99,delivery:'12-48 hrs'},{qty:'250',price:39.99,delivery:'24-72 hrs'}],
+    shares:[{qty:'100',price:2.99,delivery:'1-24 hrs'},{qty:'500',price:9.99,delivery:'6-48 hrs',popular:true},{qty:'1,000',price:16.99,delivery:'24-72 hrs'},{qty:'2,500',price:29.99,delivery:'3-5 days'}],
+    views:[{qty:'1,000',price:1.99,delivery:'1-6 hrs'},{qty:'5,000',price:6.99,delivery:'1-12 hrs',popular:true},{qty:'10,000',price:10.99,delivery:'6-24 hrs'},{qty:'50,000',price:34.99,delivery:'24-72 hrs'},{qty:'100,000',price:59.99,delivery:'3-7 days'}],
+  },
+  facebook:{
+    followers:[{qty:'100',price:2.99,delivery:'24-48 hrs'},{qty:'500',price:9.99,delivery:'48-72 hrs',popular:true},{qty:'1,000',price:16.99,delivery:'3-5 days'},{qty:'2,500',price:29.99,delivery:'5-7 days'},{qty:'5,000',price:49.99,delivery:'7-10 days'}],
+    likes:[{qty:'100',price:1.99,delivery:'1-6 hrs'},{qty:'500',price:5.99,delivery:'6-12 hrs',popular:true},{qty:'1,000',price:9.99,delivery:'12-24 hrs'},{qty:'5,000',price:29.99,delivery:'24-72 hrs'}],
+    comments:[{qty:'10',price:4.99,delivery:'1-6 hrs'},{qty:'25',price:9.99,delivery:'6-12 hrs',popular:true},{qty:'50',price:16.99,delivery:'12-24 hrs'},{qty:'100',price:24.99,delivery:'24-48 hrs'}],
+    shares:[{qty:'100',price:3.99,delivery:'6-24 hrs'},{qty:'500',price:12.99,delivery:'24-48 hrs',popular:true},{qty:'1,000',price:19.99,delivery:'48-72 hrs'}],
+    views:[{qty:'1,000',price:2.99,delivery:'1-6 hrs'},{qty:'5,000',price:8.99,delivery:'6-24 hrs',popular:true},{qty:'25,000',price:29.99,delivery:'24-72 hrs'}],
+  },
+  tiktok:{
+    followers:[{qty:'100',price:2.49,delivery:'12-24 hrs'},{qty:'500',price:7.99,delivery:'24-48 hrs',popular:true},{qty:'1,000',price:13.99,delivery:'48-72 hrs'},{qty:'5,000',price:49.99,delivery:'5-7 days'}],
+    likes:[{qty:'100',price:0.99,delivery:'0-1 hr'},{qty:'1,000',price:5.99,delivery:'1-6 hrs',popular:true},{qty:'5,000',price:18.99,delivery:'6-24 hrs'},{qty:'10,000',price:29.99,delivery:'12-48 hrs'}],
+    comments:[{qty:'10',price:2.99,delivery:'1-6 hrs'},{qty:'50',price:10.99,delivery:'6-24 hrs',popular:true},{qty:'100',price:17.99,delivery:'12-48 hrs'}],
+    shares:[{qty:'100',price:1.99,delivery:'1-12 hrs'},{qty:'500',price:6.99,delivery:'6-24 hrs',popular:true},{qty:'1,000',price:10.99,delivery:'12-48 hrs'}],
+    views:[{qty:'1,000',price:0.99,delivery:'0-1 hr'},{qty:'10,000',price:4.99,delivery:'1-6 hrs',popular:true},{qty:'100,000',price:29.99,delivery:'6-24 hrs'}],
+  },
+  youtube:{
+    followers:[{qty:'100',price:4.99,delivery:'48-72 hrs'},{qty:'500',price:16.99,delivery:'3-5 days',popular:true},{qty:'1,000',price:24.99,delivery:'5-7 days'},{qty:'5,000',price:89.99,delivery:'10-14 days'}],
+    likes:[{qty:'100',price:2.99,delivery:'6-12 hrs'},{qty:'500',price:9.99,delivery:'12-24 hrs',popular:true},{qty:'1,000',price:14.99,delivery:'24-48 hrs'}],
+    comments:[{qty:'10',price:5.99,delivery:'6-24 hrs'},{qty:'25',price:12.99,delivery:'12-48 hrs',popular:true},{qty:'50',price:19.99,delivery:'24-72 hrs'}],
+    shares:[{qty:'100',price:4.99,delivery:'6-24 hrs'},{qty:'500',price:14.99,delivery:'24-72 hrs',popular:true}],
+    views:[{qty:'1,000',price:2.49,delivery:'1-12 hrs'},{qty:'10,000',price:12.99,delivery:'6-24 hrs',popular:true},{qty:'50,000',price:39.99,delivery:'24-72 hrs'},{qty:'100,000',price:59.99,delivery:'3-5 days'}],
+  },
+  twitter:{
+    followers:[{qty:'100',price:3.49,delivery:'24-48 hrs'},{qty:'500',price:10.99,delivery:'48-72 hrs',popular:true},{qty:'1,000',price:17.99,delivery:'3-5 days'},{qty:'5,000',price:54.99,delivery:'7-10 days'}],
+    likes:[{qty:'100',price:1.49,delivery:'1-6 hrs'},{qty:'500',price:4.99,delivery:'6-12 hrs',popular:true},{qty:'1,000',price:7.99,delivery:'12-24 hrs'},{qty:'5,000',price:24.99,delivery:'24-72 hrs'}],
+    comments:[{qty:'10',price:3.49,delivery:'1-6 hrs'},{qty:'50',price:12.99,delivery:'6-24 hrs',popular:true},{qty:'100',price:19.99,delivery:'12-48 hrs'}],
+    shares:[{qty:'100',price:2.49,delivery:'1-12 hrs'},{qty:'500',price:7.99,delivery:'6-24 hrs',popular:true},{qty:'1,000',price:12.99,delivery:'12-48 hrs'}],
+    views:[{qty:'1,000',price:1.49,delivery:'1-6 hrs'},{qty:'10,000',price:7.99,delivery:'6-24 hrs',popular:true},{qty:'50,000',price:24.99,delivery:'24-72 hrs'}],
+  },
+};
+const SVC_LABELS={followers:'Followers',likes:'Likes',comments:'Comments',shares:'Shares',views:'Views'};
+const PLAT_URLS={instagram:'https://www.instagram.com/',facebook:'https://www.facebook.com/',tiktok:'https://www.tiktok.com/@',youtube:'https://www.youtube.com/@',twitter:'https://twitter.com/'};
+
+// Store state
+let storePlat='instagram', storeSvc='followers', storeCart=[];
+
+// ── USERS ──
+let USERS = JSON.parse(localStorage.getItem('mb_users')||JSON.stringify([
+  {id:1,name:'Sandra (Admin)',email:'sstin22@gmail.com',role:'admin',
+   plan:'growth',planStatus:'active',planStart:'2026-09-28',
+   platforms:['instagram'],monthlyRevenue:249,
+   urls:[{id:'u1',platform:'instagram',type:'profile',url:'https://instagram.com/sandrastinson',label:'Main IG'}]},
+  {id:2,name:'Member 2',email:'member2@myboost.com',role:'member',
+   plan:'none',planStatus:'inactive',platforms:[],monthlyRevenue:0,urls:[]},
+  {id:3,name:'Member 3',email:'member3@myboost.com',role:'member',
+   plan:'none',planStatus:'inactive',platforms:[],monthlyRevenue:0,urls:[]},
+]));
+let ACTIVITY = JSON.parse(localStorage.getItem('mb_activity')||'[]');
+let currentUser = null;
+function saveState(){
+  localStorage.setItem('mb_users',JSON.stringify(USERS));
+  localStorage.setItem('mb_activity',JSON.stringify(ACTIVITY));
+}
+
+// ── AUTH ──
+const ADMIN_EMAIL='sstin22@gmail.com';
+const ADMIN_PASS='Yasmen01@@##';
+function doLogin(){
+  const email=document.getElementById('l-email').value.trim().toLowerCase();
+  const pass=document.getElementById('l-pass').value;
+  const err=document.getElementById('l-err');
+  err.style.display='none';
+  if(email===ADMIN_EMAIL.toLowerCase()){
+    if(pass!==ADMIN_PASS){err.textContent='Wrong password.';err.style.display='block';return;}
+    let adminUser=USERS.find(u=>u.email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+    if(!adminUser){adminUser={id:1,name:'Sandra (Admin)',email:ADMIN_EMAIL,role:'admin',plan:'growth',planStatus:'active',platforms:[],urls:[],monthlyRevenue:249};USERS.unshift(adminUser);saveState();}
+    currentUser=adminUser;
+    document.getElementById('login-page').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-btn').textContent='👋 Sandra';
+    document.getElementById('admin-tab').style.display='';
+    updateSubBadge();renderAll();
+    setTimeout(runDailyAutoGrowth,2000);
+    return;
+  }
+  const user=USERS.find(u=>u.email.toLowerCase()===email);
+  if(!user){err.textContent='Email not found.';err.style.display='block';return;}
+  if(pass!==(user.password||'boost123')){err.textContent='Wrong password.';err.style.display='block';return;}
+  currentUser=user;
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('user-btn').textContent='👋 '+user.name.split(' ')[0];
+  if(user.role==='admin') document.getElementById('admin-tab').style.display='';
+  updateSubBadge();renderAll();
+}
+function doLogout(){currentUser=null;document.getElementById('login-page').style.display='flex';document.getElementById('app').style.display='none';}
+function resetPassword(uid){const u=USERS.find(u=>u.id===uid);if(!u)return;const np=prompt('New password for '+u.name+':');if(!np||np.length<6){showToast('6+ characters required','error');return;}u.password=np;saveState();showToast('Password updated ✅');}
+function updateSubBadge(){
+  const badge=document.getElementById('sub-badge');
+  const u=USERS.find(u=>u.id===currentUser.id);
+  if(u.planStatus==='active'){badge.className='sub-badge sub-active';badge.textContent=u.plan.charAt(0).toUpperCase()+u.plan.slice(1)+' ✓';}
+  else{badge.className='sub-badge sub-inactive';badge.textContent='No Plan';}
+}
+
+// ── NAVIGATION ──
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const map={dashboard:0,store:1,profile:2,plans:3,activity:4,admin:5};
+  const tabs=document.querySelectorAll('.nav-right .nav-tab');
+  if(map[id]!==undefined&&tabs[map[id]])tabs[map[id]].classList.add('active');
+  if(id==='store'){renderStorePkgs();}
+  if(id==='profile')renderProfiles();
+  if(id==='activity')renderActivity();
+  if(id==='admin'){renderAdminSubs();renderAdminActivity();}
+}
+function setAdminTab(tab,btn){
+  ['subscribers','all-activity','add-user','api-config'].forEach(t=>{
+    document.getElementById('admin-'+t).style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('#page-admin .nav-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── RENDER ALL ──
+function renderAll(){renderDashboard();renderAdminSubs();}
+
+// ── STORE ──
+function selectStorePlat(p,btn){
+  storePlat=p;storeCart=[];
+  document.querySelectorAll('.plat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStorePkgs();renderStoreCart();
+}
+function selectStoreSvc(s,btn){
+  storeSvc=s;
+  document.querySelectorAll('.svc-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderStorePkgs();
+}
+function renderStorePkgs(){
+  const grid=document.getElementById('store-pkg-grid');
+  const pkgs=(STORE_PKGS[storePlat]||{})[storeSvc]||[];
+  grid.innerHTML=pkgs.map((p,i)=>{
+    const id=`${storePlat}-${storeSvc}-${i}`;
+    const inCart=storeCart.find(c=>c.id===id);
+    return `<div class="pkg-card${p.popular?' popular':''}${inCart?' selected':''}" onclick="toggleStorePkg('${id}','${storePlat}','${storeSvc}','${p.qty}',${p.price},'${p.delivery}')">
+      ${p.popular?'<div class="pkg-best">BEST VALUE</div>':''}
+      <div class="pkg-plat-icon">${PI[storePlat]||'📱'}</div>
+      <div class="pkg-svc-label">${SVC_LABELS[storeSvc]}</div>
+      <div class="pkg-qty">${p.qty}</div>
+      <div class="pkg-sub">${storePlat.charAt(0).toUpperCase()+storePlat.slice(1)} ${SVC_LABELS[storeSvc]}</div>
+      <div class="pkg-price">$${p.price.toFixed(2)}</div>
+      <div class="pkg-delivery">⏱ ${p.delivery}</div>
+      <div class="pkg-check">✓</div>
+    </div>`;
+  }).join('');
+}
+function toggleStorePkg(id,plat,svc,qty,price,delivery){
+  const idx=storeCart.findIndex(c=>c.id===id);
+  if(idx>=0){storeCart.splice(idx,1);showToast('🗑️','Removed from order');}
+  else{storeCart.push({id,plat,svc,qty,price,delivery,quantity:1});showToast('✅',`${qty} ${SVC_LABELS[svc]} added`);}
+  renderStorePkgs();renderStoreCart();
+}
+function renderStoreCart(){
+  const content=document.getElementById('store-cart-content');
+  const totalArea=document.getElementById('store-cart-total');
+  const countBadge=document.getElementById('store-cart-count');
+  const checkoutBtn=document.getElementById('store-checkout-btn');
+  const urlSection=document.getElementById('store-url-section');
+  countBadge.textContent=storeCart.reduce((s,c)=>s+c.quantity,0);
+  if(!storeCart.length){
+    content.innerHTML='<div class="empty" style="padding:24px"><div style="font-size:28px;margin-bottom:8px">🛒</div><div>Select a package above to begin</div></div>';
+    totalArea.style.display='none';urlSection.style.display='none';checkoutBtn.disabled=true;return;
+  }
+  content.innerHTML=`<div class="cart-items">${storeCart.map(c=>`
+    <div class="cart-item">
+      <div class="cart-item-l">
+        <div class="cart-item-icon">${PI[c.plat]||'📱'}</div>
+        <div>
+          <div class="cart-item-name">${c.qty} ${SVC_LABELS[c.svc]}</div>
+          <div class="cart-item-sub">${c.plat.charAt(0).toUpperCase()+c.plat.slice(1)} · ${c.delivery}</div>
+        </div>
+      </div>
+      <div class="cart-item-r">
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeStoreQty('${c.id}',-1)">−</button>
+          <div class="qty-num">${c.quantity}</div>
+          <button class="qty-btn" onclick="changeStoreQty('${c.id}',1)">+</button>
+        </div>
+        <div class="cart-item-price">$${(c.price*c.quantity).toFixed(2)}</div>
+        <button class="remove-btn" onclick="removeStoreItem('${c.id}')">✕</button>
+      </div>
+    </div>`).join('')}</div>`;
+  const total=storeCart.reduce((s,c)=>s+c.price*c.quantity,0);
+  document.getElementById('store-total-amt').textContent='$'+total.toFixed(2);
+  totalArea.style.display='block';urlSection.style.display='block';checkoutBtn.disabled=false;
+  const urlInput=document.getElementById('store-url-input');
+  if(storeCart[0])urlInput.placeholder=(PLAT_URLS[storeCart[0].plat]||'https://')+'yourprofile';
+  document.getElementById('store-url-hint').textContent=
+    `Enter your ${storeCart[0]?storeCart[0].plat.charAt(0).toUpperCase()+storeCart[0].plat.slice(1):''} profile or post URL`;
+}
+function changeStoreQty(id,d){const c=storeCart.find(c=>c.id===id);if(c){c.quantity=Math.max(1,c.quantity+d);renderStoreCart();}}
+function removeStoreItem(id){storeCart=storeCart.filter(c=>c.id!==id);renderStorePkgs();renderStoreCart();}
+function validateStoreUrl(){
+  const url=document.getElementById('store-url-input').value.trim();
+  const st=document.getElementById('store-url-status');
+  if(!url){st.innerHTML='<span style="color:var(--red)">⚠️ Please enter a URL first</span>';return;}
+  try{new URL(url);st.innerHTML='<span style="color:var(--green)">✅ URL looks valid!</span>';}
+  catch{st.innerHTML='<span style="color:var(--red)">⚠️ Enter a valid URL starting with https://</span>';}
+}
+function openStoreCheckout(){
+  const url=document.getElementById('store-url-input').value.trim();
+  if(!url){showToast('⚠️','Enter your profile/post URL first');document.getElementById('store-url-input').focus();return;}
+  const total=storeCart.reduce((s,c)=>s+c.price*c.quantity,0);
+  document.getElementById('store-checkout-content').innerHTML=`
+    <div class="modal-title">Complete Your Order</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px">Review and confirm your packages.</p>
+    <div class="modal-summary">
+      ${storeCart.map(c=>`<div class="modal-row"><span>${PI[c.plat]} ${c.qty} ${SVC_LABELS[c.svc]} × ${c.quantity}</span><span style="color:var(--accent2);font-weight:600">$${(c.price*c.quantity).toFixed(2)}</span></div>`).join('')}
+      <div class="modal-row modal-total"><span>Total</span><span style="color:var(--accent2)">$${total.toFixed(2)}</span></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px">Delivering to: ${url}</div>
+    </div>
+    <div class="form-group"><label>Your Name</label><input id="co-name" placeholder="First & Last Name"/></div>
+    <div class="form-group"><label>Email</label><input type="email" id="co-email" placeholder="you@example.com"/></div>
+    <button class="btn-violet btn-full" style="margin-top:4px" onclick="submitStoreOrder()">Pay $${total.toFixed(2)} — Confirm →</button>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--muted)">🔒 Secured by Stripe</div>`;
+  document.getElementById('store-checkout-overlay').classList.add('open');
+}
+function submitStoreOrder(){
+  const name=document.getElementById('co-name').value.trim();
+  const email=document.getElementById('co-email').value.trim();
+  if(!name||!email){showToast('⚠️','Fill in name and email');return;}
+  document.getElementById('store-checkout-content').innerHTML=`
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:52px;margin-bottom:14px">🚀</div>
+      <div style="font-size:20px;font-weight:800;margin-bottom:10px">Order Received!</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7">Thanks ${name.split(' ')[0]}! Delivery begins within 24 hours.<br/>Confirmation sent to <strong style="color:var(--text)">${email}</strong>.</p>
+      <button class="btn-violet" style="margin-top:22px;width:100%" onclick="document.getElementById('store-checkout-overlay').classList.remove('open');storeCart=[];renderStorePkgs();renderStoreCart();">Back to Store</button>
+    </div>`;
+}
+
+// ── DASHBOARD ──
+function renderDashboard(){
+  const u=USERS.find(u=>u.id===currentUser.id);
+  const h=new Date().getHours();
+  document.getElementById('dash-greeting').textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+', '+u.name.split(' ')[0]+' 👋';
+  document.getElementById('dash-sub-info').textContent=(u.plan==='none'?'No active plan':`${u.plan.charAt(0).toUpperCase()+u.plan.slice(1)} Plan`)+' · '+(u.planStatus==='active'?'Growth running daily':'Subscribe to start auto-growth');
+  const myAct=ACTIVITY.filter(a=>a.userId===u.id);
+  const delivered=myAct.filter(a=>a.status==='completed').reduce((s,a)=>s+a.qty,0);
+  document.getElementById('dash-stats').innerHTML=[
+    {icon:'📈',val:u.urls.length,label:'Saved URLs',color:'#a78bfa'},
+    {icon:'⚡',val:delivered.toLocaleString(),label:'Total Delivered',color:'#34D399'},
+    {icon:'📱',val:u.platforms.length,label:'Platforms',color:'#FF6B35'},
+    {icon:'🔄',val:myAct.filter(a=>a.status==='processing').length,label:'In Progress',color:'#3b82f6'},
+  ].map(s=>`<div class="stat-card" style="border-left:3px solid ${s.color}">
+    <div style="font-size:20px;margin-bottom:6px">${s.icon}</div>
+    <div style="font-size:24px;font-weight:800;color:${s.color}">${s.val}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.label}</div>
+  </div>`).join('');
+  if(u.planStatus==='active'){
+    const prices={starter:99,growth:249,pro:449};
+    document.getElementById('dash-sub-content').innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div><div style="font-size:16px;font-weight:700">${u.plan.charAt(0).toUpperCase()+u.plan.slice(1)} Plan</div>
+        <div style="font-size:12px;color:var(--muted)">Active since ${u.planStart||'today'}</div></div>
+        <div style="font-size:22px;font-weight:800;color:var(--green)">$${prices[u.plan]||0}<span style="font-size:12px;color:var(--muted)">/mo</span></div>
+      </div>
+      <div style="background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.2);border-radius:8px;padding:11px;font-size:12px;color:var(--dim);line-height:1.7">
+        ⚡ Auto-growth runs daily · 📸 IG: 9am · 👥 FB: 9am · 🎵 TikTok: 2pm · ▶️ YouTube: 2pm
+      </div>`;
+  } else {
+    document.getElementById('dash-sub-content').innerHTML=`
+      <div style="text-align:center;padding:16px">
+        <div style="font-size:30px;margin-bottom:10px">🚀</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">No active subscription</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Subscribe to start daily auto-growth</div>
+        <button class="btn-violet" onclick="showPage('plans')">View Plans →</button>
+      </div>`;
+  }
+  if(!u.urls.length){
+    document.getElementById('dash-platforms').innerHTML=`<div class="empty">No URLs added yet. <a href="#" onclick="showPage('profile')" style="color:var(--accent2)">Add your profiles →</a></div>`;
+  } else {
+    const byP={};u.urls.forEach(url=>{if(!byP[url.platform])byP[url.platform]=[];byP[url.platform].push(url);});
+    document.getElementById('dash-platforms').innerHTML=Object.entries(byP).map(([plat,urls])=>`
+      <div style="margin-bottom:12px">
+        <div style="font-size:12px;font-weight:600;color:${PC[plat]};margin-bottom:6px">${PI[plat]} ${plat.charAt(0).toUpperCase()+plat.slice(1)}</div>
+        ${urls.map(u=>`<span class="url-tag">${PI[u.platform]} ${u.label||u.url}</span>`).join('')}
+      </div>`).join('');
+  }
+  const recent=ACTIVITY.filter(a=>a.userId===u.id).slice(0,4);
+  document.getElementById('dash-activity').innerHTML=recent.length?recent.map(a=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:13px;font-weight:500">${PI[a.platform]} ${a.type} — ${a.qty} delivered</div>
+      <div style="font-size:11px;color:var(--muted)">${a.url} · ${a.date}</div></div>
+      <span class="chip s-${a.status}">${a.status}</span>
+    </div>`).join(''):'<div class="empty">No activity yet.</div>';
+}
+
+// ── PROFILES ──
+function renderProfiles(){
+  const u=USERS.find(u=>u.id===currentUser.id);
+  if(!u.urls.length){
+    document.getElementById('profiles-list').innerHTML=`
+      <div class="card" style="text-align:center;padding:48px">
+        <div style="font-size:32px;margin-bottom:10px">📱</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">No profiles added yet</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Add your social URLs — growth is delivered here automatically</div>
+        <button class="btn-ember" onclick="openAddUrl()">+ Add First URL</button>
+      </div>`;
+    return;
+  }
+  const plats=[...new Set(u.urls.map(u=>u.platform))];
+  document.getElementById('profiles-list').innerHTML=plats.map(plat=>`
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div style="font-size:14px;font-weight:600;color:${PC[plat]}">${PI[plat]} ${plat.charAt(0).toUpperCase()+plat.slice(1)}</div>
+      </div>
+      ${u.urls.filter(url=>url.platform===plat).map(url=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+          <div>
+            <div style="font-size:13px;font-weight:500">${url.label||url.url}</div>
+            <div style="font-size:11px;color:var(--muted)">${url.type} · ${url.url}</div>
+          </div>
+          <div class="row">
+            <span class="chip s-active" style="font-size:10px">Active</span>
+            <button class="btn-sm" onclick="deleteUrl('${url.id}')">Remove</button>
+          </div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+function openAddUrl(){document.getElementById('url-value').value='';document.getElementById('url-label').value='';document.getElementById('url-overlay').classList.add('open');}
+function saveUrl(){
+  const u=USERS.find(u=>u.id===currentUser.id);
+  const platform=document.getElementById('url-platform').value;
+  const type=document.getElementById('url-type').value;
+  const url=document.getElementById('url-value').value.trim();
+  const label=document.getElementById('url-label').value.trim();
+  if(!url){showToast('⚠️','Please enter a URL');return;}
+  u.urls.push({id:'u'+Date.now(),platform,type,url,label,added:new Date().toISOString().slice(0,10)});
+  if(!u.platforms.includes(platform))u.platforms.push(platform);
+  saveState();
+  document.getElementById('url-overlay').classList.remove('open');
+  showToast('✅','URL saved!');renderProfiles();renderDashboard();
+}
+function deleteUrl(urlId){
+  const u=USERS.find(u=>u.id===currentUser.id);
+  u.urls=u.urls.filter(url=>url.id!==urlId);
+  u.platforms=[...new Set(u.urls.map(url=>url.platform))];
+  saveState();renderProfiles();renderDashboard();showToast('✅','URL removed');
+}
+
+// ── PLANS ──
+function selectPlan(plan,price){
+  const titles={starter:'Starter Plan — $99/mo',growth:'Growth Plan — $249/mo',pro:'Pro Plan — $449/mo'};
+  const desc={starter:'1 platform, daily auto-growth (followers + likes).',growth:'Instagram (auto-posts to Facebook). Full daily growth.',pro:'All 4 platforms. Maximum growth. Priority fulfillment.'};
+  document.getElementById('plan-modal-title').textContent=titles[plan];
+  document.getElementById('plan-modal-body').innerHTML=`
+    <div style="background:rgba(124,92,252,0.06);border:1px solid rgba(124,92,252,0.2);border-radius:10px;padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;color:var(--dim);line-height:1.7">${desc[plan]}</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.7">
+      Contact admin at <strong style="color:var(--accent2)">hello@sohomediahouse.com</strong> to activate.
+    </div>`;
+  document.getElementById('plan-confirm-btn').onclick=()=>requestPlan(plan,price);
+  document.getElementById('plan-overlay').classList.add('open');
+}
+function requestPlan(plan,price){
+  const u=USERS.find(u=>u.id===currentUser.id);
+  ACTIVITY.push({id:'a'+Date.now(),userId:u.id,userName:u.name,platform:'system',type:'plan-request',qty:0,url:'',status:'pending',fulfillment:'manual',date:new Date().toISOString().slice(0,10),note:`Requested ${plan} plan at $${price}/mo`});
+  saveState();document.getElementById('plan-overlay').classList.remove('open');
+  showToast('✅',`Plan request sent! Admin will activate your ${plan} plan.`);renderActivity();
+}
+
+// ── ACTIVITY ──
+function renderActivity(){
+  const u=USERS.find(u=>u.id===currentUser.id);
+  const myAct=ACTIVITY.filter(a=>a.userId===u.id);
+  const tbody=document.getElementById('activity-tbody');
+  if(!myAct.length){tbody.innerHTML='<tr><td colspan="7" class="empty">No activity yet.</td></tr>';return;}
+  tbody.innerHTML=myAct.map(a=>`<tr>
+    <td style="color:var(--muted)">${a.date}</td>
+    <td>${a.platform==='system'?'⚙ System':(PI[a.platform]||'')+'  '+a.platform}</td>
+    <td style="text-transform:capitalize">${a.type}</td>
+    <td>${a.qty>0?a.qty.toLocaleString():'—'}</td>
+    <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${a.url||a.note||'—'}</td>
+    <td><span class="chip s-${a.status}">${a.status}</span></td>
+    <td style="font-size:11px;color:${a.fulfillment==='auto'?'var(--green)':'#f59e0b'}">${a.fulfillment==='auto'?'⚡ Auto':'Manual'}</td>
+  </tr>`).join('');
+}
+
+// ── ADMIN ──
+function renderAdminSubs(){
+  const tbody=document.getElementById('admin-sub-tbody');
+  if(!USERS.length){tbody.innerHTML='<tr><td colspan="8" class="empty">No members yet.</td></tr>';return;}
+  tbody.innerHTML=USERS.map(u=>`<tr>
+    <td style="font-weight:500">${u.name}</td>
+    <td style="color:var(--muted);font-size:12px">${u.email}</td>
+    <td style="color:var(--accent2);font-weight:500;text-transform:capitalize">${u.plan==='none'?'—':u.plan}</td>
+    <td><span class="chip ${u.planStatus==='active'?'s-active':'s-paused'}">${u.planStatus}</span></td>
+    <td>${u.platforms.map(p=>PI[p]).join(' ')||'—'}</td>
+    <td style="color:var(--muted);font-size:12px">${u.planStart||'—'}</td>
+    <td style="color:var(--green);font-weight:600">${u.monthlyRevenue>0?'$'+u.monthlyRevenue+'/mo':'—'}</td>
+    <td>
+      <div class="row">
+        <select style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-size:11px" onchange="adminSetPlan(${u.id},this.value)">
+          <option value="none" ${u.plan==='none'?'selected':''}>No Plan</option>
+          <option value="starter" ${u.plan==='starter'?'selected':''}>Starter $99</option>
+          <option value="growth" ${u.plan==='growth'?'selected':''}>Growth $249</option>
+          <option value="pro" ${u.plan==='pro'?'selected':''}>Pro $449</option>
+        </select>
+        <button class="btn-sm" onclick="triggerAutoGrowth(${u.id},true)">⚡ Run Now</button>
+        ${u.email!==ADMIN_EMAIL?`<button class="btn-sm" onclick="resetPassword(${u.id})" style="color:#f59e0b;border-color:rgba(245,158,11,0.3)">🔑 Reset PW</button>`:''}
+      </div>
+    </td>
+  </tr>`).join('');
+}
+function adminSetPlan(uid,plan){
+  const u=USERS.find(u=>u.id===uid);
+  const prices={none:0,starter:99,growth:249,pro:449};
+  u.plan=plan;u.planStatus=plan==='none'?'inactive':'active';u.monthlyRevenue=prices[plan]||0;u.planStart=new Date().toISOString().slice(0,10);
+  saveState();showToast('✅',`${u.name} set to ${plan} plan`);renderAdminSubs();
+  if(currentUser.id===uid){updateSubBadge();renderDashboard();}
+}
+function renderAdminActivity(){
+  const tbody=document.getElementById('admin-activity-tbody');
+  if(!ACTIVITY.length){tbody.innerHTML='<tr><td colspan="7" class="empty">No activity yet.</td></tr>';return;}
+  tbody.innerHTML=ACTIVITY.map(a=>`<tr>
+    <td style="color:var(--muted)">${a.date}</td><td>${a.userName||'—'}</td>
+    <td>${a.platform==='system'?'⚙':(PI[a.platform]||'')} ${a.platform}</td>
+    <td style="text-transform:capitalize">${a.type}</td>
+    <td>${a.qty>0?a.qty.toLocaleString():'—'}</td>
+    <td><span class="chip s-${a.status}">${a.status}</span></td>
+    <td style="color:${a.fulfillment==='auto'?'var(--green)':'#f59e0b'};font-size:12px">${a.fulfillment==='auto'?'⚡ Auto':'Manual'}</td>
+  </tr>`).join('');
+}
+function addUser(){
+  const name=document.getElementById('au-name').value;
+  const email=document.getElementById('au-email').value;
+  const plan=document.getElementById('au-plan').value;
+  if(!name||!email){showToast('⚠️','Name and email required');return;}
+  const prices={none:0,starter:99,growth:249,pro:449};
+  USERS.push({id:Date.now(),name,email,role:'member',plan,planStatus:plan==='none'?'inactive':'active',planStart:new Date().toISOString().slice(0,10),platforms:[],monthlyRevenue:prices[plan]||0,urls:[]});
+  saveState();document.getElementById('au-name').value='';document.getElementById('au-email').value='';
+  showToast('✅',name+' added! Password: boost123');renderAdminSubs();
+}
+
+// ── AUTO GROWTH ──
+async function triggerAutoGrowth(uid,force=false){
+  const u=USERS.find(u=>u.id===uid);
+  if(!u.urls.length){showToast('⚠️','No URLs saved for this member');return;}
+  if(u.planStatus!=='active'){showToast('⚠️','Member has no active plan');return;}
+  const today=new Date().toISOString().slice(0,10);
+  if(!force&&u.lastRun===today){showToast('✅',u.name+' already ran today — growth is processing');return;}
+  u.lastRun=today;saveState();
+  showToast('✅','Running auto-growth for '+u.name+'...');
+  for(const url of u.urls){
+    const pkgs=AUTO_PACKAGES[url.platform];
+    if(!pkgs) continue;
+    for(const[type,pkg] of Object.entries(pkgs)){
+      const activity={id:'a'+Date.now()+Math.random(),userId:u.id,userName:u.name,platform:url.platform,type,qty:pkg.qty,url:url.url,status:'processing',fulfillment:PEAKERR_KEY&&PEAKERR_KEY!=='YOUR_PEAKERR_API_KEY'?'auto':'manual',date:today,note:''};
+      if(PEAKERR_KEY&&PEAKERR_KEY!=='YOUR_PEAKERR_API_KEY'&&pkg.svc){
+        try{
+          const r=await fetch(`${PEAKERR_URL}?key=${PEAKERR_KEY}&action=add&service=${pkg.svc}&link=${encodeURIComponent(url.url)}&quantity=${pkg.qty}`);
+          const d=await r.json();
+          if(d.order){activity.status='processing';activity.peakerr_id=d.order.toString();}
+          else activity.status='pending';
+        }catch(e){activity.status='pending';}
+      }
+      ACTIVITY.unshift(activity);
+      await new Promise(r=>setTimeout(r,300));
+    }
+  }
+  saveState();showToast('✅','Auto-growth triggered for '+u.name+'! ⚡');
+  renderAdminActivity();renderActivity();renderDashboard();
+}
+async function runDailyAutoGrowth(){
+  if(!currentUser||currentUser.role!=='admin') return;
+  const today=new Date().toISOString().slice(0,10);
+  if(localStorage.getItem('mb_last_auto_run')===today) return;
+  localStorage.setItem('mb_last_auto_run',today);
+  const active=USERS.filter(u=>u.planStatus==='active'&&u.urls&&u.urls.length>0);
+  if(!active.length) return;
+  showToast('✅','⚡ Auto-growth running for '+active.length+' member(s)...');
+  for(const u of active){await triggerAutoGrowth(u.id,false);await new Promise(r=>setTimeout(r,500));}
+  showToast('✅','✅ Daily auto-growth complete!');
+}
+
+// ── API/CLOUD ──
+function saveApiConfig(){
+  PEAKERR_KEY=document.getElementById('api-key-input').value.trim()||PEAKERR_KEY;
+  PEAKERR_URL=document.getElementById('api-url-input').value.trim()||PEAKERR_URL;
+  localStorage.setItem('pk_key',PEAKERR_KEY);
+  localStorage.setItem('pk_url',PEAKERR_URL);
+  showToast('✅','API config saved!');
+}
+async function testApi(){
+  const key=document.getElementById('api-key-input').value.trim()||PEAKERR_KEY;
+  const url=document.getElementById('api-url-input').value.trim()||PEAKERR_URL;
+  const el=document.getElementById('api-result');
+  el.style.display='block';el.style.color='#f59e0b';el.textContent='Testing...';
+  try{
+    const r=await fetch(`${url}?key=${key}&action=balance`);
+    const d=await r.json();
+    if(d.balance!==undefined){el.style.color='var(--green)';el.textContent='✅ Connected! Balance: $'+parseFloat(d.balance).toFixed(2);}
+    else{el.style.color='var(--red)';el.textContent='❌ Check API key';}
+  }catch(e){el.style.color='var(--red)';el.textContent='❌ Connection error';}
+}
+async function syncToCloud(){
+  const el=document.getElementById('sync-status');
+  el.style.display='block';el.style.color='#f59e0b';el.textContent='Syncing...';
+  try{
+    const res=await fetch('/api/sync',{method:'POST',headers:{'Content-Type':'application/json','x-cron-secret':localStorage.getItem('cron_secret')||''},body:JSON.stringify({users:USERS,activity:ACTIVITY.slice(0,100)})});
+    if(res.ok){el.style.color='var(--green)';el.textContent='✅ Synced — cron will run at 7am daily';}
+    else{el.style.color='var(--ember)';el.textContent='⚠ Sync failed — deploy api/cron.js first';}
+  }catch(e){el.style.color='var(--ember)';el.textContent='⚠ Endpoint not live yet — deploy api/cron.js first';}
+}
+function saveSchedule(){
+  SCHEDULE={ig:document.getElementById('t-ig').value,fb:document.getElementById('t-fb').value,tt:document.getElementById('t-tt').value,yt:document.getElementById('t-yt').value};
+  localStorage.setItem('mb_schedule',JSON.stringify(SCHEDULE));
+  showToast('✅','Schedule saved!');
+}
+
+// ── STRIPE ──
+const STRIPE_PK='pk_live_51UMC6iE9Wg6mGb3NbVCBK9u9nDGAdyyK3eoOg4sMngkiUw68BAJAdzwVV4kadIfm0n84nkJfwsRRk1j0nkgl5twf00tEZXadm5';
+const STRIPE_PRICES={growth:'price_1UNNmWCpaTEcSNaEJ4qWrSYu',pro:'price_1UNNnECpaTEcSNaEe5pEtASy',addon:'price_1UNNo6CpaTEcSNaEtHlQxl1v',blog:'price_1UNNoyCpaTEcSNaEPAmZppn0'};
+async function stripeCheckout(plan){
+  if(currentUser&&currentUser.role==='admin'){showToast('⚠️','Admin accounts exempt from payment');return;}
+  const priceId=STRIPE_PRICES[plan];
+  if(!priceId){showToast('⚠️','Plan not found');return;}
+  try{
+    const stripe=Stripe(STRIPE_PK);
+    const{error}=await stripe.redirectToCheckout({lineItems:[{price:priceId,quantity:1}],mode:'subscription',successUrl:window.location.origin+'?success=true&plan='+plan,cancelUrl:window.location.origin+'?canceled=true',customerEmail:currentUser?.email||undefined});
+    if(error) showToast('⚠️',error.message);
+  }catch(e){showToast('⚠️','Checkout error — try again');}
+}
+
+// ── HELPERS ──
+function closeOverlay(e,id){if(e.target===document.getElementById(id))document.getElementById(id).classList.remove('open');}
+let toastTimer;
+function showToast(icon,msg){
+  if(typeof icon==='string'&&typeof msg==='undefined'){msg=icon;icon='✅';}
+  clearTimeout(toastTimer);
+  const t=document.getElementById('toast');
+  document.getElementById('toast-icon').textContent=icon;
+  document.getElementById('toast-msg').textContent=msg;
+  const isErr=icon==='⚠️'||icon==='❌';
+  t.className='toast show'+(isErr?' error':'');
+  toastTimer=setTimeout(()=>{t.className='toast';},4000);
+}
+
+// Stripe return handler
+const urlParams=new URLSearchParams(window.location.search);
+if(urlParams.get('success')==='true'){
+  const plan=urlParams.get('plan')||'growth';
+  setTimeout(()=>showToast('✅','Payment successful! '+plan+' plan is now active ⚡'),1000);
+  window.history.replaceState({},document.title,window.location.pathname);
+}
+if(urlParams.get('canceled')==='true'){
+  setTimeout(()=>showToast('⚠️','Payment cancelled.'),500);
+  window.history.replaceState({},document.title,window.location.pathname);
+}
+
+// Pre-fill API key input if visible
+window.addEventListener('load',()=>{
+  const k=document.getElementById('api-key-input');
+  if(k) k.value=PEAKERR_KEY;
+});
+</script>
+</body>
+</html>
